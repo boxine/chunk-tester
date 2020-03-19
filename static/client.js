@@ -73,7 +73,11 @@ function render(state) {
                 continue;
             }
 
-            el(td, 'div', {}, `HTML ${formatHash(serverResult.htmlHash)}`);
+            if (serverResult.htmlError) {
+                el(td, 'div', {'class': 'error'}, serverResult.htmlError);
+            } else {
+                el(td, 'div', {}, `HTML ${formatHash(serverResult.htmlHash)}`);
+            }
         }
 
         // JavaScript versions per server
