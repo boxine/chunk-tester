@@ -4,6 +4,7 @@ const argparse = require('argparse');
 const crypto = require('crypto');
 const urlModule = require('url');
 
+const webserver = require('./webserver');
 const {wait, retry} = require('./promise_utils');
 const {resolveIPs, downloadURL} = require('./net_utils');
 const {extractChunks} = require('./parser');
@@ -117,19 +118,21 @@ async function main() {
     });
     const args = parser.parseArgs();
 
-    const versions = []; // Array of HTML versions {htmlHash, html, jsURLs: Array of URLs, firstSeen, lastSeen}
-    const runs = []; // {started, finished, results: Array of runData (see check function)}
+    const state = {
+        versions: [], // Array of HTML versions {htmlHash, html, jsURLs: Array of URLs, firstSeen, lastSeen}
+        runs: [], // {started, finished, results: Array of runData (see check function)}
+    };
 
+    await webserver.launch(args, state);
     // TODO relay info via webserver?
 
     while (true) { // eslint-disable-line no-constant-condition
         const started = Date.now();
-        const results = await check(args.URL, versions, args.ipv4_only);
-
+        const results = await check(args.URL, state.versions, args.ipv4_only);
         console.log(JSON.stringify(results, undefined, 2));
 
         // TODO better integration of data
-        runs.push({
+        state.runs.push({
             started,
             finished: Date.now(),
             results,

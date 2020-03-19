@@ -10,6 +10,7 @@
     "mocha": "^7.1.0"
   },
   "dependencies": {
-    "argparse": "^1.0.10"
+    "argparse": "^1.0.10",
+    "express": "^4.17.1"
   }
 }
