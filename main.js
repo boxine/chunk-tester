@@ -33,7 +33,8 @@ function sha2(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
 }
 
-// Returns an object mapping the serverIPs to {htmlHash, jsStatus}
+// Returns an object mapping the serverIPs to {htmlHash, htmlError, jsStatus}
+// One of htmlHash and htmlError is set
 // jsStatus is an object mapping JavaScript URLs to {errcode, hash} where errcode is only set if the download failed
 // Mutates versions to reflect the current state of available SPA versions
 async function check(htmlURL, versions, ipv4Only) {
@@ -44,25 +45,30 @@ async function check(htmlURL, versions, ipv4Only) {
     const htmlResults = await Promise.all(ips.map(ip => downloadURL(htmlURL, ip)));
     const now = Date.now();
     for (const res of htmlResults) {
-        const htmlHash = sha2(res.content);
-        results[res.serverIP] = {
-            htmlHash,
+        const serverResult = {
             jsStatus: {},
         };
-
-        // Did we find a new version?
-        const version = versions.find(v => v.htmlHash === htmlHash);
-        if (version) {
-            version.lastSeen = now;
+        if (res.statusCode !== 200) {
+            serverResult.htmlError = res.statusCode;
         } else {
-            versions.push({
-                htmlHash,
-                html: res.content,
-                firstSeen: now,
-                lastSeen: now,
-                jsURLs: extractChunks(res.content).map(path => urlModule.resolve(htmlURL, path)),
-            });
+            const htmlHash = sha2(res.content);
+            serverResult.htmlHash = htmlHash;
+
+            // Did we find a new version?
+            const version = versions.find(v => v.htmlHash === htmlHash);
+            if (version) {
+                version.lastSeen = now;
+            } else {
+                versions.push({
+                    htmlHash,
+                    html: res.content,
+                    firstSeen: now,
+                    lastSeen: now,
+                    jsURLs: extractChunks(res.content).map(path => urlModule.resolve(htmlURL, path)),
+                });
+            }
         }
+        results[res.serverIP] = serverResult;
     }
 
     // Collect all JavaScript URLs to download

@@ -37,34 +37,41 @@ async function resolveIPs(url, ipv4Only) {
 // Sets the additional properties on the response:
 // - content (whole response content)
 // - serverIP the ip address of the server, as specified
-function downloadURL(url, serverIP) {
+async function downloadURL(url, serverIP) {
     assert(/^https?:\/\//.test(url), `Invalid URL ${url}`);
     assert.strictEqual(typeof serverIP, 'string');
     const requestFunc = url.startsWith('https://') ? https.request : http.request;
 
-    return new Promise((resolve, reject) => {
-        const request = requestFunc(url, {
-            lookup: (_hostname, {all}, callback) => {
-                assert(!all, '"all" option not implemented');
-                callback(null, serverIP, serverIP.includes(':') ? 6 : 4);
-            },
-            timeout: 10000,
-        }, res => {
-            res.setEncoding('utf8');
-            res.content = '';
-            res.serverIP = serverIP;
-            res.on('data', chunk => {
-                res.content += chunk;
+    try {
+        return await new Promise((resolve, reject) => {
+            const request = requestFunc(url, {
+                lookup: (_hostname, {all}, callback) => {
+                    assert(!all, '"all" option not implemented');
+                    callback(null, serverIP, serverIP.includes(':') ? 6 : 4);
+                },
+                timeout: 10000,
+            }, res => {
+                res.setEncoding('utf8');
+                res.content = '';
+                res.serverIP = serverIP;
+                res.on('data', chunk => {
+                    res.content += chunk;
+                });
+                res.on('end', () => {
+                    resolve(res);
+                });
             });
-            res.on('end', () => {
-                resolve(res);
+            request.on('error', e => {
+                reject(e);
             });
+            request.end();
         });
-        request.on('error', e => {
-            reject(e);
-        });
-        request.end();
-    });
+    } catch(e) {
+        return {
+            statusCode: `error ${e.code}`,
+            serverIP: serverIP,
+        };
+    }
 }
 
 module.exports = {

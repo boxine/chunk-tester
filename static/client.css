@@ -14,3 +14,7 @@ th {
 tr:hover td {
 	background: #ccc;
 }
+
+.error {
+	color: #ff0000;
+}
