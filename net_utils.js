@@ -48,6 +48,7 @@ function downloadURL(url, serverIP) {
                 assert(!all, '"all" option not implemented');
                 callback(null, serverIP, serverIP.includes(':') ? 6 : 4);
             },
+            timeout: 10000,
         }, res => {
             res.setEncoding('utf8');
             res.content = '';
