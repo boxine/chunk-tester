@@ -8,6 +8,10 @@ const {check} = require('./check');
 const {initState, integrateCheckResult} = require('./state');
 
 async function main() {
+    process.on('SIGINT', () => {
+        process.exit();
+    });
+
     const parser = argparse.ArgumentParser({
         description: 'Monitor chunk status in an SPA',
     });

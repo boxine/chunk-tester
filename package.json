@@ -1,6 +1,7 @@
 {
   "name": "chunk-tester",
   "main": "main.js",
+  "description": "Test JavaScript Chunk Management in an SPA installation",
   "scripts": {
     "test": "mocha test/"
   },
