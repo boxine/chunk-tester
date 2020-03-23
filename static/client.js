@@ -65,9 +65,9 @@ function allEqual(ar) {
     return ar.every(el => deepEqual(el, ar[0]));
 }
 
-function copyHTML(el) {
-    const html = el.target.getAttribute('data-html');
-    navigator.clipboard.writeText(html);
+function copyContent(el) {
+    const content = el.target.getAttribute('data-content');
+    navigator.clipboard.writeText(content);
 }
 
 function chunkName(url) {
@@ -187,6 +187,18 @@ function render(state) {
                         el(li, 'span', {
                             style: `color: ${errCode ? '#cc0000' : '#004400'}`,
                         }, errCode || '✔');
+                        if (errCode === 'changed-hash') {
+                            const expectedLink = el(
+                                li, 'td',
+                                {'data-content': fileResult.expectedContent, 'class': 'copy-link'},
+                                '📋Expected');
+                            expectedLink.addEventListener('click', copyContent);
+                            const actualLink = el(
+                                li, 'td',
+                                {'data-content': fileResult.gotContent, 'class': 'copy-link'},
+                                '📋Actual');
+                            actualLink.addEventListener('click', copyContent);
+                        }
                     }
                 }
             }
@@ -199,8 +211,8 @@ function render(state) {
     for (const v of state.versions) {
         const tr = el(versionsTbody, 'tr', {id: `version-${v.htmlHash}`});
         el(tr, 'th', {title: v.htmlHash}, formatHash(v.htmlHash));
-        const copyLink = el(tr, 'td', {'data-html': v.html, 'class': 'copy-link'}, '📋Copy HTML');
-        copyLink.addEventListener('click', copyHTML);
+        const copyLink = el(tr, 'td', {'data-content': v.html, 'class': 'copy-link'}, '📋Copy HTML');
+        copyLink.addEventListener('click', copyContent);
         el(tr, 'td', {}, `${formatTime(v.firstSeen)} - ${formatTime(v.lastSeen)}`);
         const chunksTd = el(tr, 'td', {}, 'Chunks: ');
         for (const url of v.jsURLs) {

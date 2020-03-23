@@ -1,3 +1,4 @@
+const assert = require('assert');
 const urlModule = require('url');
 
 const {retry} = require('./promise_utils');
@@ -10,7 +11,9 @@ const {cmpKeys, sha2} = require('./data_utils');
 // If an error occurs, error is set with {code, messge}
 // jsStatus is an object mapping JavaScript URLs to {errcode, hash} where errcode is only set if the download failed
 // Mutates versions to reflect the current state of available SPA versions
-async function check(htmlURL, versions, ipv4Only) {
+async function check(htmlURL, state, ipv4Only) {
+    const {versions, referenceContent} = state;
+
     let ips;
     try {
         ips = await retry(3, () => resolveIPs(htmlURL, ipv4Only));
@@ -94,10 +97,33 @@ async function check(htmlURL, versions, ipv4Only) {
             const contentType = response.headers['content-type'];
             if (!contentType) {
                 runResult = {errcode: 'no-content-type'};
-            }else if (! /javascript|ecmascript/.test(contentType)) {
+            } else if (! /javascript|ecmascript/.test(contentType)) {
                 runResult = {errcode: 'soft-404'};
             } else {
-                runResult = {hash: sha2(response.content)};
+                assert.equal(typeof response.content, 'string');
+                const hash = sha2(response.content);
+                runResult = {
+                    hash,
+                };
+
+                // Check against stored reference content
+                if (!referenceContent[jsURL]) { // never seen this URL, store it
+                    referenceContent[jsURL] = {
+                        hash,
+                        content: response.content,
+                    };
+                } else {
+                    const reference = referenceContent[jsURL];
+                    if (hash !== reference.hash) {
+                        runResult = {
+                            errcode: 'changed-hash',
+                            expectedHash: reference.hash,
+                            gotHash: hash,
+                            expectedContent: reference.content,
+                            gotContent: response.content,
+                        };
+                    }
+                }
             }
         }
         results[serverIP].jsStatus[jsURL] = runResult;
