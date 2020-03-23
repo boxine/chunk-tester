@@ -83,8 +83,16 @@ function chunkName(url) {
 }
 
 function render(state) {
+    const titleEl = document.querySelector('title');
+    empty(titleEl);
+    const hostname = (new URL(state.url)).hostname;
+    titleEl.appendChild(document.createTextNode(`Chunk Tester ${hostname}`));
+
     const main = document.querySelector('main');
     empty(main);
+
+    const h1 = el(main, 'h1', {}, 'Chunk tester for ');
+    el(h1, 'a', {href: state.url}, hostname);
 
     const allServers = [];
     for (const run of state.runs) {
@@ -133,7 +141,10 @@ function render(state) {
             if (serverResult.htmlError) {
                 el(td, 'div', {'class': 'error'}, serverResult.htmlError);
             } else {
-                el(td, 'div', {}, `HTML ${formatHash(serverResult.htmlHash)}`);
+                el(td, 'div', {}, 'HTML ');
+                el(
+                    td, 'a', {href: `#version-${serverResult.htmlHash}`, 'class': 'invisible-link'},
+                    formatHash(serverResult.htmlHash));
             }
         }
 
@@ -185,7 +196,7 @@ function render(state) {
     const versionsTable = el(main, 'table');
     const versionsTbody = el(versionsTable, 'tbody');
     for (const v of state.versions) {
-        const tr = el(versionsTbody, 'tr');
+        const tr = el(versionsTbody, 'tr', {id: `version-${v.htmlHash}`});
         el(tr, 'th', {title: v.htmlHash}, formatHash(v.htmlHash));
         const copyLink = el(tr, 'td', {'data-html': v.html, 'class': 'copy-link'}, '📋Copy HTML');
         copyLink.addEventListener('click', copyHTML);
