@@ -1,0 +1,13 @@
+stages:
+    - test
+
+test:
+    stage: test
+    image: node:lts-alpine
+    tags:
+        - nodejs
+    script:
+        - apk add make
+        - npm install
+        - make test
+        - make lint
