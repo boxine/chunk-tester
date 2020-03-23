@@ -7,7 +7,9 @@ function initState() {
     return {
         // Array of HTML versions {htmlHash, html, jsURLs: Array of URLs, firstSeen, lastSeen}
         versions: [],
-        // {results: Array of runData (see check function)}
+        // Array of objects:
+        //    results: Array of runData (see check function),
+        //    knownVersions: Array of htmlHash values of all known versions at the time of run
         runs: [],
     };
 }
@@ -15,8 +17,12 @@ function initState() {
 function integrateCheckResult(state, results, finishedTimestamp) {
     assert.strictEqual(typeof finishedTimestamp, 'number');
 
-    if (state.runs.length > 0 && deepEqual(state.runs[state.runs.length - 1].results, results)) {
-        state.runs[state.runs.length - 1].lastFinished = finishedTimestamp;
+    const knownVersions = state.versions.map(v => v.htmlHash);
+
+    const lastRun = (state.runs.length > 0) && state.runs[state.runs.length - 1];
+    if (lastRun && deepEqual(lastRun.results, results)) {
+        lastRun.lastFinished = finishedTimestamp;
+        lastRun.knownVersions = knownVersions;
         return;
     }
 
@@ -24,6 +30,7 @@ function integrateCheckResult(state, results, finishedTimestamp) {
         firstFinished: finishedTimestamp,
         lastFinished: finishedTimestamp,
         results,
+        knownVersions,
     });
 }
 

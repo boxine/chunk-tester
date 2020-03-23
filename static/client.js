@@ -133,7 +133,9 @@ function render(state) {
         }
 
         // JavaScript versions per server
-        for (const v of state.versions) {
+        for (const versionHash of run.knownVersions) {
+            const v = state.versions.find(version => version.htmlHash === versionHash);
+
             const tr = el(tbody, 'tr');
             el(tr, 'td', {style: 'text-align: right'}, formatHash(v.htmlHash));
 
