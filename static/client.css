@@ -4,6 +4,14 @@ html, body {
 	margin: 0; padding: 0;
 }
 
+main {
+	margin: 5px;
+}
+
+h2 {
+	margin-bottom: 10px;
+}
+
 table {
 	border-collapse: collapse;
 }
@@ -11,10 +19,21 @@ th {
 	text-align: center;
 }
 
-tr:hover td {
+tr:hover>td, tr:hover>th {
 	background: #ccc;
 }
 
 .error {
 	color: #ff0000;
+}
+
+.copy-link {
+	cursor: pointer;
+}
+.copy-link:hover {
+	text-decoration: underline;
+}
+
+.chunk-link {
+	display: inline-block; margin: 0.2em;
 }
