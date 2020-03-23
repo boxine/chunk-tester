@@ -1,9 +1,25 @@
 const assert = require('assert').strict;
+const fs = require('fs');
+const {promisify} = require('util');
 
 const {deepEqual} = require('./data_utils.js');
 
 
-function initState() {
+async function initState(stateFile) {
+    if (stateFile) {
+        try {
+            const json = await promisify(fs.readFile)(stateFile, {encoding: 'utf-8'});
+            const res = JSON.parse(json);
+            assert(res.versions);
+            assert(res.runs);
+            return res;
+        } catch(e) {
+            if (e.code !== 'ENOENT') {
+                throw e;
+            }
+        }
+    }
+
     return {
         // Array of HTML versions {htmlHash, html, jsURLs: Array of URLs, firstSeen, lastSeen}
         versions: [],
@@ -14,9 +30,17 @@ function initState() {
     };
 }
 
+async function writeState(stateFile, state) {
+    if (!stateFile) return;
+
+    // Write atomically to avoid data corruption
+    const tmpFile = stateFile + '.tmp';
+    await promisify(fs.writeFile)(tmpFile, JSON.stringify(state), {encoding: 'utf-8'});
+    await promisify(fs.rename)(tmpFile, stateFile);
+}
+
 function integrateCheckResult(state, results, finishedTimestamp) {
     assert.strictEqual(typeof finishedTimestamp, 'number');
-
     const knownVersions = state.versions.map(v => v.htmlHash);
 
     const lastRun = (state.runs.length > 0) && state.runs[state.runs.length - 1];
@@ -37,4 +61,5 @@ function integrateCheckResult(state, results, finishedTimestamp) {
 module.exports = {
     initState,
     integrateCheckResult,
+    writeState,
 };
