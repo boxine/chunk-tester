@@ -89,7 +89,7 @@ function render(state) {
     const allServers = [];
     for (const run of state.runs) {
         for (const server of Object.keys(run.results)) {
-            if (!allServers.includes(server)) {
+            if (!allServers.includes(server) && server !== 'error') {
                 allServers.push(server);
             }
         }
@@ -112,6 +112,11 @@ function render(state) {
         el(timeTd, 'div', {}, formatTime(run.firstFinished));
         if (run.firstFinished !== run.lastFinished) {
             el(timeTd, 'div', {}, formatTime(run.lastFinished));
+        }
+
+        if (run.results.error) {
+            el(tr, 'td', {colspan: allServers.length, 'class': 'error'}, run.results.error.message);
+            continue;
         }
 
         const allSame = allEqual(Object.values(run.results));

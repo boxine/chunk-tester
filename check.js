@@ -7,14 +7,33 @@ const {cmpKeys, sha2} = require('./data_utils');
 
 // Returns an object mapping the serverIPs to {htmlHash, htmlError, jsStatus}
 // One of htmlHash and htmlError is set
+// If an error occurs, error is set with {code, messge}
 // jsStatus is an object mapping JavaScript URLs to {errcode, hash} where errcode is only set if the download failed
 // Mutates versions to reflect the current state of available SPA versions
 async function check(htmlURL, versions, ipv4Only) {
-    const ips = await retry(3, () => resolveIPs(htmlURL, ipv4Only));
+    let ips;
+    try {
+        ips = await retry(3, () => resolveIPs(htmlURL, ipv4Only));
+    } catch(e) {
+        return {
+            error: {
+                code: e.code,
+                message: e.message,
+            },
+        };
+    }
     const results = {};
 
     // Download HTML from every IP
-    const htmlResults = await Promise.all(ips.map(ip => downloadURL(htmlURL, ip)));
+    let htmlResults;
+    try {
+        htmlResults = await Promise.all(ips.map(ip => downloadURL(htmlURL, ip)));
+    } catch(e) {
+        return {
+            error: e.code,
+            message: 'Download error ' + e.code,
+        };
+    }
     const now = Date.now();
     for (const res of htmlResults) {
         const serverResult = {
