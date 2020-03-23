@@ -38,6 +38,33 @@ function formatHash(hash) {
     return hash.slice(0, 4);
 }
 
+// From https://gist.github.com/egardner/efd34f270cc33db67c0246e837689cb9
+function deepEqual(obj1, obj2) {
+    if (obj1 === obj2) {
+        return true;
+    } else if (_isObject(obj1) && _isObject(obj2)) {
+        if (Object.keys(obj1).length !== Object.keys(obj2).length) {
+            return false;
+        }
+        for (const prop in obj1) {
+            if (!deepEqual(obj1[prop], obj2[prop])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function _isObject(obj) {
+        return typeof obj === 'object' && obj != null;
+    }
+}
+
+function allEqual(ar) {
+    if (ar.length <= 1) return false;
+
+    return ar.every(el => deepEqual(el, ar[0]));
+}
+
 function render(state) {
     const main = document.querySelector('main');
     empty(main);
@@ -62,13 +89,21 @@ function render(state) {
     const tbody = el(table, 'tbody');
     for (const run of state.runs) {
         const tr = el(tbody, 'tr');
-        el(tr, 'td', {
+        const timeTd = el(tr, 'td', {
             style: 'vertical-align: top;color:#888;',
-        }, formatTime(run.finished));
+        });
+        el(timeTd, 'div', {}, formatTime(run.firstFinished));
+        if (run.firstFinished !== run.lastFinished) {
+            el(timeTd, 'div', {}, formatTime(run.lastFinished));
+        }
 
-        for (const s of allServers) {
+        const allSame = allEqual(Object.values(run.results));
+        const usedServers = allSame ? [allServers[0]] : allServers;
+        const serverAttrs = allSame ? {colspan: allServers.length, style: 'text-align:center;'} : {};
+
+        for (const s of usedServers) {
             const serverResult = run.results[s];
-            const td = el(tr, 'td');
+            const td = el(tr, 'td', serverAttrs);
             if (! serverResult) {
                 continue;
             }
@@ -85,9 +120,9 @@ function render(state) {
             const tr = el(tbody, 'tr');
             el(tr, 'td', {style: 'text-align: right'}, formatHash(v.htmlHash));
 
-            for (const s of allServers) {
+            for (const s of usedServers) {
                 const serverResult = run.results[s];
-                const td = el(tr, 'td');
+                const td = el(tr, 'td', serverAttrs);
                 if (! serverResult) {
                     continue;
                 }
