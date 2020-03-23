@@ -30,4 +30,19 @@ describe('chunk parsing', () => {
             ]
         );
     });
+
+    it('extractChunks against local', async () => {
+        const html = await promisify(fs.readFile)(
+            path.join(__dirname, 'spa-index_local.html'), {encoding: 'utf-8'});
+        const found = extractChunks(html);
+
+        assert.deepStrictEqual(
+            found,
+            [
+                '/static/js/1.chunk.js',
+                '/static/js/bundle.js',
+                '/static/js/main.chunk.js',
+            ]
+        );
+    });
 });
