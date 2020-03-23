@@ -65,6 +65,23 @@ function allEqual(ar) {
     return ar.every(el => deepEqual(el, ar[0]));
 }
 
+function copyHTML(el) {
+    const html = el.target.getAttribute('data-html');
+    navigator.clipboard.writeText(html);
+}
+
+function chunkName(url) {
+    // Chunk name as in https://example.com/foo/bar/main.1930af.chunk.js
+    let m = /\/([0-9a-z]+)\.[^.]*\.chunk\.js/.exec(url);
+    if (m) return m[1];
+
+    // basename
+    m = /\/[^/]+([?#]|$)/.exec(url);
+    if (m) return m[1];
+
+    return url;
+}
+
 function render(state) {
     const main = document.querySelector('main');
     empty(main);
@@ -137,6 +154,21 @@ function render(state) {
                 }, versionOk ? '✔' : 'X');
                 // TODO more info if !versionOk
             }
+        }
+    }
+
+    el(main, 'h2', {}, 'All Versions');
+    const versionsTable = el(main, 'table');
+    const versionsTbody = el(versionsTable, 'tbody');
+    for (const v of state.versions) {
+        const tr = el(versionsTbody, 'tr');
+        el(tr, 'th', {title: v.htmlHash}, formatHash(v.htmlHash));
+        const copyLink = el(tr, 'td', {'data-html': v.html, 'class': 'copy-link'}, '📋Copy HTML');
+        copyLink.addEventListener('click', copyHTML);
+        el(tr, 'td', {}, `${formatTime(v.firstSeen)} - ${formatTime(v.lastSeen)}`);
+        const chunksTd = el(tr, 'td', {}, 'Chunks: ');
+        for (const url of v.jsURLs) {
+            el(chunksTd, 'a', {href: url, 'class': 'chunk-link'}, chunkName(url));
         }
     }
 }
