@@ -40,7 +40,7 @@ async function check(htmlURL, versions, ipv4Only) {
             jsStatus: {},
         };
         if (res.statusCode !== 200) {
-            serverResult.htmlError = res.statusCode;
+            serverResult.htmlError = `HTTP ${res.statusCode}`;
         } else {
             const htmlHash = sha2(res.content);
             serverResult.htmlHash = htmlHash;
@@ -50,13 +50,22 @@ async function check(htmlURL, versions, ipv4Only) {
             if (version) {
                 version.lastSeen = now;
             } else {
-                versions.push({
-                    htmlHash,
-                    html: res.content,
-                    firstSeen: now,
-                    lastSeen: now,
-                    jsURLs: extractChunks(res.content).map(path => urlModule.resolve(htmlURL, path)),
-                });
+                let relativeURLs = null;
+                try {
+                    relativeURLs = extractChunks(res.content);
+                } catch(e) {
+                    serverResult.htmlError = e.message;
+                }
+                if (relativeURLs) { // No error occured
+                    const jsURLs = relativeURLs.map(path => urlModule.resolve(htmlURL, path));
+                    versions.push({
+                        htmlHash,
+                        html: res.content,
+                        firstSeen: now,
+                        lastSeen: now,
+                        jsURLs,
+                    });
+                }
             }
         }
         results[res.serverIP] = serverResult;
