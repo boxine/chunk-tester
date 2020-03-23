@@ -76,7 +76,7 @@ function chunkName(url) {
     if (m) return m[1];
 
     // basename
-    m = /\/[^/]+([?#]|$)/.exec(url);
+    m = /\/([^/]+)(?:[?#]|$)/.exec(url);
     if (m) return m[1];
 
     return url;
