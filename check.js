@@ -88,10 +88,15 @@ async function check(htmlURL, versions, ipv4Only) {
         let runResult;
         if (response.statusCode !== 200) {
             runResult = {errcode: response.statusCode};
-        } else if(/^\s+</.test(response.content)) {
-            runResult = {errcode: 'soft-404'};
         } else {
-            runResult = {hash: sha2(response.content)};
+            const contentType = response.headers['content-type'];
+            if (!contentType) {
+                runResult = {errcode: 'no-content-type'};
+            }else if (! /javascript|ecmascript/.test(contentType)) {
+                runResult = {errcode: 'soft-404'};
+            } else {
+                runResult = {hash: sha2(response.content)};
+            }
         }
         results[serverIP].jsStatus[jsURL] = runResult;
     }
