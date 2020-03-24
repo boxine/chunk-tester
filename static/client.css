@@ -42,3 +42,14 @@ tr:hover>td, tr:hover>th {
 .chunk-link {
 	display: inline-block; margin: 0.2em;
 }
+
+.invisible-link {
+	color: inherit;
+	text-decoration: none;
+}
+.invisible-link:hover {
+	text-decoration: underline;
+}
+tr:target {
+	background: #eef;
+}
