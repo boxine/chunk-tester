@@ -43,7 +43,7 @@ async function main() {
     await webserver.launch(args, state);
 
     while (true) { // eslint-disable-line no-constant-condition
-        const results = await check(args.URL, state.versions, args.ipv4_only);
+        const results = await check(args.URL, state, args.ipv4_only);
 
         integrateCheckResult(state, results, Date.now());
         await writeState(args.state_file, state);

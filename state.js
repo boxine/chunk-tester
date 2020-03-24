@@ -27,6 +27,8 @@ async function initState(stateFile) {
         //    results: Array of runData (see check function),
         //    knownVersions: Array of htmlHash values of all known versions at the time of run
         runs: [],
+        // Object, JavaScript URL => {hash, content}
+        referenceContent: {},
     };
 }
 
