@@ -126,8 +126,8 @@ function render(state) {
             el(tr, 'td', {colspan: allServers.length, 'class': 'error'}, run.results.error.message);
             continue;
         }
-
-        const allSame = allEqual(Object.values(run.results));
+        const runResults = Object.values(run.results);
+        const allSame = runResults.length === allServers.length && allEqual(runResults);
         const usedServers = allSame ? [allServers[0]] : allServers;
         const serverAttrs = allSame ? {colspan: allServers.length, style: 'text-align:center;'} : {};
 
@@ -135,6 +135,7 @@ function render(state) {
             const serverResult = run.results[s];
             const td = el(tr, 'td', serverAttrs);
             if (! serverResult) {
+                el(td, 'div', {style: 'color: #404;'}, 'IP not tested');
                 continue;
             }
 
