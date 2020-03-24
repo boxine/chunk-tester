@@ -12,7 +12,11 @@ async function launch(args, state) {
     app.get('/state', (req, res) => {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Expires', '0');
-        res.send({...state, url: args.URL});
+        res.send({
+            runs: state.runs,
+            versions: state.versions,
+            url: args.URL,
+        });
     });
 
     await new Promise(resolve => {
