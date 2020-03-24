@@ -156,10 +156,27 @@ function render(state) {
                     return fileResult && !fileResult.errcode;
                 });
 
-                el(td, 'div', {
-                    style: `color: ${versionOk ? '#004400' : '#cc0000'}`,
-                }, versionOk ? '✔' : 'X');
-                // TODO more info if !versionOk
+                if (versionOk) {
+                    el(td, 'div', {
+                        style: 'color: #004400;',
+                    }, '✔');
+                } else if (allEqual(v.jsURLs.map(jsURL => serverResult.jsStatus[jsURL].errcode))) {
+                    el(
+                        td, 'div', {style: 'color: #cc0000;'},
+                        `All chunks: ${serverResult.jsStatus[v.jsURLs[0]].errcode}`);
+                } else {
+                    const errorsContainer = el(td, 'div');
+                    for (const jsURL of v.jsURLs) {
+                        const fileResult = serverResult.jsStatus[jsURL];
+                        const li = el(
+                            errorsContainer, 'div', {style: 'display:inline-block; margin-right:.8em;'});
+                        el(li, 'a', {href: jsURL, 'class': 'chunk-link'}, chunkName(jsURL));
+                        const errCode = fileResult ? fileResult.errcode : 'not downloaded';
+                        el(li, 'span', {
+                            style: `color: ${errCode ? '#cc0000' : '#004400'}`,
+                        }, errCode || '✔');
+                    }
+                }
             }
         }
     }
