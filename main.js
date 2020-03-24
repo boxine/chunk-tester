@@ -5,7 +5,7 @@ const argparse = require('argparse');
 const webserver = require('./webserver');
 const {wait} = require('./promise_utils');
 const {check} = require('./check');
-const {initState, integrateCheckResult} = require('./state');
+const {initState, integrateCheckResult, writeState} = require('./state');
 
 async function main() {
     const parser = argparse.ArgumentParser({
@@ -25,12 +25,16 @@ async function main() {
         defaultValue: 3005,
         help: 'Port for the server to run on (default: %(defaultValue)s)',
     });
+    parser.addArgument(['-s', '--state-file'], {
+        metavar: 'FILE',
+        help: 'Resume and store the current state in the specified file',
+    });
     parser.addArgument('URL', {
         help: 'Website to check',
     });
     const args = parser.parseArgs();
 
-    const state = initState();
+    const state = await initState(args.state_file);
 
     await webserver.launch(args, state);
 
@@ -38,6 +42,8 @@ async function main() {
         const results = await check(args.URL, state.versions, args.ipv4_only);
 
         integrateCheckResult(state, results, Date.now());
+        await writeState(args.state_file, state);
+
         await wait(args.interval);
     }
 }

@@ -4,7 +4,7 @@ const {initState, integrateCheckResult} = require('../state.js');
 
 describe('state', () => {
     it('run compression', async () => {
-        const state = initState();
+        const state = await initState();
         integrateCheckResult(state, {
             foo: 1,
         }, 1580000000001);
