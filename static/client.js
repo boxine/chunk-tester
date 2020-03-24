@@ -209,7 +209,7 @@ function render(state) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const res = await fetch('/state');
+    const res = await fetch(window.location.pathname + 'state');
     if (res.status !== 200) {
         alert(`Failed retrieving data with ${res.status} - check server`);
         return;
