@@ -4,6 +4,8 @@ const http = require('http');
 const https = require('https');
 const urlModule = require('url');
 
+const {retry} = require('./promise_utils');
+
 // Convert DNS error NODATA to empty array
 async function _orEmpty(dnsPromise) {
     try {
@@ -33,6 +35,40 @@ async function resolveIPs(url, ipv4Only) {
     return res;
 }
 
+async function _runDownload(url, serverIP) {
+    const requestFunc = url.startsWith('https://') ? https.request : http.request;
+
+    const start = Date.now();
+    return await new Promise((resolve, reject) => {
+        const request = requestFunc(url, {
+            lookup: (_hostname, {all}, callback) => {
+                assert(!all, '"all" option not implemented');
+                callback(null, serverIP, serverIP.includes(':') ? 6 : 4);
+            },
+            timeout: 20000,
+        }, res => {
+            res.setEncoding('utf8');
+            res.content = '';
+            res.serverIP = serverIP;
+            res.on('data', chunk => {
+                res.content += chunk;
+            });
+            res.on('end', () => {
+                resolve(res);
+            });
+        });
+        request.on('error', e => {
+            reject(e);
+        });
+        request.on('timeout', () => {
+            request.abort();
+            console.log(`GET ${url} at ${serverIP} timed out after ${Date.now() - start}ms`);
+            reject(new Error('timeout'));
+        });
+        request.end();
+    });
+}
+
 // async function, returns a promise of the response.
 // Sets the additional properties on the response:
 // - content (whole response content)
@@ -40,35 +76,12 @@ async function resolveIPs(url, ipv4Only) {
 async function downloadURL(url, serverIP) {
     assert(/^https?:\/\//.test(url), `Invalid URL ${url}`);
     assert.strictEqual(typeof serverIP, 'string');
-    const requestFunc = url.startsWith('https://') ? https.request : http.request;
-
+ 
     try {
-        return await new Promise((resolve, reject) => {
-            const request = requestFunc(url, {
-                lookup: (_hostname, {all}, callback) => {
-                    assert(!all, '"all" option not implemented');
-                    callback(null, serverIP, serverIP.includes(':') ? 6 : 4);
-                },
-                timeout: 10000,
-            }, res => {
-                res.setEncoding('utf8');
-                res.content = '';
-                res.serverIP = serverIP;
-                res.on('data', chunk => {
-                    res.content += chunk;
-                });
-                res.on('end', () => {
-                    resolve(res);
-                });
-            });
-            request.on('error', e => {
-                reject(e);
-            });
-            request.end();
-        });
+        return await retry(2, () => _runDownload(url, serverIP), err => err.message === 'timeout');
     } catch(e) {
         return {
-            statusCode: `error ${e.code}`,
+            statusCode: `error ${e.code || e.message}`,
             serverIP: serverIP,
         };
     }

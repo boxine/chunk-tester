@@ -17,7 +17,7 @@ async function check(htmlURL, versions, ipv4Only) {
     } catch(e) {
         return {
             error: {
-                code: e.code,
+                code: e.code || e.message,
                 message: e.message,
             },
         };
@@ -30,8 +30,10 @@ async function check(htmlURL, versions, ipv4Only) {
         htmlResults = await Promise.all(ips.map(ip => downloadURL(htmlURL, ip)));
     } catch(e) {
         return {
-            error: e.code,
-            message: 'Download error ' + e.code,
+            error: {
+                code: e.code || e.message,
+                message: 'Download error ' + e.code,
+            },
         };
     }
     const now = Date.now();
