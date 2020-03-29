@@ -1,14 +1,19 @@
 const assert = require('assert');
 
+function js2json(nearlyJSON) {
+    return nearlyJSON.replace(/(?<=[{,])([0-9]+)(?=:)/g, '"$1"');
+}
+
 function extractChunks(html) {
-    const m = /"([^"]+)"\+\([^)]+\)+\+"\."\+(\{[^}]*\}).*?\+"(\.chunk\.js)"/.exec(html);
+    const m = /"([^"]+)"\+\((\{[^}]*\})[^)]+\)+\+"\."\+(\{[^}]*\}).*?\+"(\.chunk\.js)"/.exec(html);
     const res = [];
     if (m) {
-        const [, prefix, chunksNearlyJSON, suffix] = m;
-        const chunksJSON = chunksNearlyJSON.replace(/(?<=[{,])([0-9]+)(?=:)/g, '"$1"');
-        const chunks = JSON.parse(chunksJSON);
+        const [, prefix, namesNearlyJSON, chunksNearlyJSON, suffix] = m;
+        const names = JSON.parse(js2json(namesNearlyJSON));
+        const chunks = JSON.parse(js2json(chunksNearlyJSON));
         res.push(... Object.entries(chunks).map(
-            ([chunkNum, chunkHash]) => '/' + prefix + chunkNum + '.' + chunkHash + suffix));
+            ([chunkNum, chunkHash]) => (
+                '/' + prefix + (names[chunkNum] || chunkNum) + '.' + chunkHash + suffix)));
     }
     res.push(... Array.from(html.matchAll(/<script src="([^"]+)"/g), m => m[1]));
 

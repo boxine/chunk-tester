@@ -72,7 +72,7 @@ function copyContent(el) {
 
 function chunkName(url) {
     // Chunk name as in https://example.com/foo/bar/main.1930af.chunk.js
-    let m = /\/([0-9a-z]+)\.[^.]*\.chunk\.js/.exec(url);
+    let m = /\/([^/.]+)\.[0-9a-f]*\.chunk\.js/.exec(url);
     if (m) return m[1];
 
     // basename
