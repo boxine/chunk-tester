@@ -31,6 +31,31 @@ describe('chunk parsing', () => {
         );
     });
 
+    it('extractChunks with named chunks', async () => {
+        const html = await promisify(fs.readFile)(
+            path.join(__dirname, 'spa-index_named.html'), {encoding: 'utf-8'});
+        const found = extractChunks(html);
+
+        assert.deepStrictEqual(
+            found,
+            [
+                '/static/js/0.97475ece.chunk.js',
+                '/static/js/12.d678a0d8.chunk.js',
+                '/static/js/13.3c345f73.chunk.js',
+                '/static/js/byebye.d8712cb2.chunk.js',
+                '/static/js/creative-tonie-detail.801ea486.chunk.js',
+                '/static/js/data-protection.7043023f.chunk.js',
+                '/static/js/hallo.61a9d184.chunk.js',
+                '/static/js/hello.41f267c7.chunk.js',
+                '/static/js/imprint.caf23269.chunk.js',
+                '/static/js/main.fc8294ba.chunk.js',
+                '/static/js/notifications.558e812c.chunk.js',
+                '/static/js/signup.4b051c6d.chunk.js',
+                '/static/js/terms-and-conditions.0c1f16fa.chunk.js',
+            ]
+        );
+    });
+
     it('extractChunks against local', async () => {
         const html = await promisify(fs.readFile)(
             path.join(__dirname, 'spa-index_local.html'), {encoding: 'utf-8'});
