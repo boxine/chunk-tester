@@ -81,7 +81,7 @@ async function downloadURL(url, serverIP) {
         return await retry(2, () => _runDownload(url, serverIP), err => err.message === 'timeout');
     } catch(e) {
         return {
-            statusCode: `error ${e.code || e.message}`,
+            statusCode: e.code || e.message,
             serverIP: serverIP,
         };
     }

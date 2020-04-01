@@ -45,7 +45,11 @@ async function check(htmlURL, state, ipv4Only) {
             jsStatus: {},
         };
         if (res.statusCode !== 200) {
-            serverResult.htmlError = `HTTP ${res.statusCode}`;
+            if (typeof res.statusCode == 'number') {
+                serverResult.htmlError = `HTTP ${res.statusCode}`;
+            } else {
+                serverResult.htmlError = res.statusCode;
+            }
         } else {
             const htmlHash = sha2(res.content);
             serverResult.htmlHash = htmlHash;
